@@ -168,7 +168,7 @@ gUnit.gcn: gUnit.gct
 gUnit.gct: gUnit.grace StandardPrelude.gct minigrace
 	./minigrace $(VERBOSITY) --make --noexec -XNoMain $<
 
-install: minigrace $(GRACE_MODULES:%.grace=js/%.js) $(GRACE_DIALECTS_GSO) $(GRACE_DIALECTS:%.grace=js/%.js) $(STUB_GCTS)
+install: minigrace gracelib.o js/grace $(GRACE_MODULES:%.grace=js/%.js) $(GRACE_DIALECTS_GSO) $(GRACE_DIALECTS:%.grace=js/%.js) $(STUB_GCTS)
 	install -d $(PREFIX)/bin $(MODULE_PATH) $(OBJECT_PATH) $(INCLUDE_PATH)
 	install -m 755 minigrace $(PREFIX)/bin/minigrace
 	install -m 755 js/grace $(PREFIX)/bin/grace
@@ -388,7 +388,9 @@ repltest: minigrace
 	./tests/harness "../minigrace" tests repl
 
 rtobjectdraw.grace: objectdraw.grace pull-objectdraw tools/make-rt-version
-	./tools/make-rt-version objectdraw.grace > rtobjectdraw.grace
+# This test is not redundant, becasue pull-objectdraw is a phony target	
+	if [ objectdraw.grace -nt rtobjectdraw.grace ] ; then \
+    ./tools/make-rt-version objectdraw.grace > rtobjectdraw.grace ; fi
 
 rtobjectdraw.gcn rtobjectdraw.gso:
 	@echo "Can't build $@; no C version of dom module"
