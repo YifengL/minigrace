@@ -125,9 +125,9 @@ type Dictionary<K,T> = Collection<T> & type {
     contains(elem:T) -> Boolean
     at(key:K)ifAbsent(action:Block0<Unknown>) -> Unknown
     at(key:K)put(value:T) -> Dictionary<K,T>
-    []:= (k:K, v:T) -> Done
+    []:=(k:K, v:T) -> Done
     at(k:K) -> T
-    [] (k:K) -> T
+    [](k:K) -> T
     removeAllKeys(keys:Collection<K>) -> Dictionary<K,T>
     removeKey(*keys:K) -> Dictionary<K,T>
     removeAllValues(removals:Collection<T>) -> Dictionary<K,T>
@@ -138,7 +138,7 @@ type Dictionary<K,T> = Collection<T> & type {
     keysAndValuesDo(action:Block2<K,T,Done>) -> Done
     keysDo(action:Block1<K,Done>) -> Done
     valuesDo(action:Block1<T,Done>) -> Done
-    == (other:Object) -> Boolean
+    ==(other:Object) -> Boolean
     copy -> Dictionary<K,T>
     ++ (other:Dictionary<K, T>) -> Dictionary<K, T>
     -- (other:Dictionary<K, T>) -> Dictionary<K, T>
@@ -178,50 +178,50 @@ factory method lazySequenceOver<T,R>(source:Collection<T>)
     method size { source.size }
     method isEmpty { source.isEmpty }
     method asDebugString { "a lazy sequence mapping over {source}" }
-}
+    }
 
 factory method lazySequenceOver<T>(source:Collection<T>) 
         filteredBy(predicate:Block1<T,Boolean>) -> Enumerable<T> is confidential {
     inherits enumerable.trait<T>
     factory method iterator {
-        var cache
-        var cacheLoaded := false
+            var cache
+            var cacheLoaded := false
         def sourceIterator = source.iterator
         method asString { "an iterator over filtered {source}" }
-        method hasNext {
+            method hasNext {
         // To determine if this iterator has a next element, we have to find
         // an acceptable element; this is then cached, for the use of next
-            if (cacheLoaded) then { return true }
-            try {
-                cache := nextAcceptableElement
-                cacheLoaded := true
-            } catch { ex:Exhausted -> return false }
-            return true
-        }
-        method next {
-            if (cacheLoaded.not) then { cache := nextAcceptableElement }
-            cacheLoaded := false
-            return cache
-        }
-        method nextAcceptableElement is confidential {
+                if (cacheLoaded) then { return true }
+                try {
+                    cache := nextAcceptableElement
+                    cacheLoaded := true
+                } catch { ex:Exhausted -> return false }
+                return true
+            }
+            method next {
+                if (cacheLoaded.not) then { cache := nextAcceptableElement }
+                cacheLoaded := false
+                return cache
+            }
+            method nextAcceptableElement is confidential {
         // return the next element of the underlying iterator satisfying
         // predicate; if there is none, raises Exhausted.
-            while { true } do {
+                while { true } do {
                 def outerNext = sourceIterator.next
                 def acceptable = predicate.apply(outerNext)
-                if (acceptable) then { return outerNext }
+                    if (acceptable) then { return outerNext }
+                }
             }
         }
-    }
     method asDebugString { "a lazy sequence filtering {source}" }
-}
+    }
 factory method iteratorConcat<T>(left:Iterator<T>, right:Iterator<T>) {
     method next {
         if (left.hasNext) then {
             left.next
         } else {
             right.next
-        }
+}
     }
     method hasNext {
         if (left.hasNext) then { return true }
@@ -266,7 +266,7 @@ class collection.trait<T> {
     }
     method fold(blk)startingWith(initial) {
         var result := initial
-        self.do {it ->
+        self.do {it->
             result := blk.apply(result, it)
         }
         return result
@@ -419,7 +419,7 @@ class indexable.trait<T> {
     }
     method onto(f: CollectionFactory<T>) -> Collection<T> {
         f.withAll(self)
-    }
+}
     method into(existing: Collection<T>) -> Collection<T> {
         def selfIterator = self.iterator
         while {selfIterator.hasNext} do { 
@@ -446,15 +446,15 @@ factory method sequence<T> {
             } catch { _:SizeUnknown -> 
                 forecastSize := forecastSize + 8
                 sizeUncertain := true
-            }
+        }
         }
         var inner := _prelude.PrimitiveArray.new(forecastSize)
         var innerSize := inner.size
         var ix := 0
         if (sizeUncertain) then {
             // less-than-optimal path
-            for (a) do { arg ->
-                for (arg) do { elt ->
+        for (a) do { arg ->
+            for (arg) do { elt ->
                     if (innerSize <= ix) then {
                         def newInner = _prelude.PrimitiveArray.new(innerSize*2)
                         for (0..(innerSize-1)) do { i ->
@@ -463,17 +463,17 @@ factory method sequence<T> {
                         inner := newInner
                         innerSize := inner.size
                     }
-                    inner.at(ix)put(elt)
-                    ix := ix + 1
-                }
+                inner.at(ix)put(elt)
+                ix := ix + 1
             }
+        }
         } else {
             // common, fast path
             for (a) do { arg ->
                 for (arg) do { elt ->
                     inner.at(ix)put(elt)
                     ix := ix + 1
-                }
+    }
             }
         }
         self.fromPrimitiveArray(inner, ix)
@@ -526,7 +526,7 @@ factory method sequence<T> {
                 var s := "⟨"
                 for (0..(size-1)) do {i->
                     s := s ++ inner.at(i).asString
-                    if (i < (size-1)) then { s := s ++ ", " }
+                    if (i < (size-1)) then { s := s ++ "," }
                 }
                 s ++ "⟩"
             }
@@ -1009,7 +1009,7 @@ factory method list<T> {
                 var s := "["
                 for (0..(size-1)) do {i->
                     s := s ++ inner.at(i).asString
-                    if (i < (size-1)) then { s := s ++ ", " }
+                    if (i < (size-1)) then { s := s ++ "," }
                 }
                 s ++ "]"
             }
@@ -1229,7 +1229,7 @@ factory method set<T> {
             method asString {
                 var s := "set\{"
                 do {each -> s := s ++ each.asString }
-                    separatedBy { s := s ++ ", " }
+                    separatedBy { s := s ++ "," }
                 s ++ "\}"
             }
             method extend(l) {
@@ -1316,7 +1316,7 @@ factory method set<T> {
                 for (self) do {v->
                     if (!other.contains(v)) then {
                         result.add(v)
-                    }
+            }
                 }
                 result
             }
@@ -1326,12 +1326,12 @@ factory method set<T> {
             }
             method onto(f: CollectionFactory<T>) -> Collection<T> {
                 f.withAll(self)
-            }
+        }
             method into(existing: Collection<T>) -> Collection<T> {
                 do { each -> existing.add(each) }
                 existing
-            }
-        }
+    }
+}
     }
 }
 
@@ -1403,7 +1403,7 @@ factory method dictionary<K,T> {
                 }
                 NoSuchObject.raise "dictionary does not contain entry with key {k}"
             }
-            method at(k) ifAbsent(action) {
+            method at(k)ifAbsent(action) {
                 var b := inner.at(findPosition(k))
                 if (b.key == k) then {
                     return b.value
@@ -1530,8 +1530,8 @@ factory method dictionary<K,T> {
                         method next { sourceIterator.next.key }
                         method asString { 
                             "an iterator over keys of {sourceDictionary}"
-                        }
-                    }
+                }
+            }
                     def size is public = sourceDictionary.size
                     method asDebugString { 
                         "a lazy sequence over keys of {sourceDictionary}"
@@ -1549,8 +1549,8 @@ factory method dictionary<K,T> {
                         method next { sourceIterator.next.value }
                         method asString { 
                             "an iterator over values of {sourceDictionary}"
-                        }
-                    }
+                }
+            }
                     def size is public = sourceDictionary.size
                     method asDebugString {
                         "a lazy sequence over values of {sourceDictionary}"
@@ -1572,25 +1572,25 @@ factory method dictionary<K,T> {
             method iterator -> Iterator<T> { values.iterator }
             factory method bindingsIterator -> Iterator<Binding<K, T>> {
                 // this should be confidential, but can't be until `outer` is fixed.
-                var count := 1
-                var idx := 0
-                var elt
+                    var count := 1
+                    var idx := 0
+                    var elt
                 method hasNext { size >= count }
-                method next {
+                    method next {
                     if (size < count) then {
-                        Exhausted.raise "over {outer.asString}"
-                    }
-                    while {
-                        elt := inner.at(idx)
+                            Exhausted.raise "over {outer.asString}"
+                        }
+                        while {
+                            elt := inner.at(idx)
                         (elt == unused) || (elt == removed)
-                    } do {
+                        } do {
+                            idx := idx + 1
+                        }
+                        count := count + 1
                         idx := idx + 1
+                        elt
                     }
-                    count := count + 1
-                    idx := idx + 1
-                    elt
                 }
-            }
             method expand is confidential {
                 def c = inner.size
                 def n = c * 2
@@ -1674,10 +1674,10 @@ factory method dictionary<K,T> {
                 keysAndValuesDo { k, v -> 
                     if (! other.containsKey(k)) then {
                         newDict.at(k) put(v)
-                    }
-                }
+        }
+    }
                 return newDict
-            }
+}
         }
     }
 }
@@ -1782,7 +1782,7 @@ factory method range {
                     }
             }
             method sorted { self }
-
+            
             method sortedBy(c) { self.asList.sortBy(c) }
             
             method keys { 1..self.size }
@@ -1897,7 +1897,7 @@ factory method range {
                     }
             }
             method sorted { self.reversed }
-
+            
             method sortedBy(c) { self.asList.sortBy(c) }
             
             method keys { 1..self.size }
